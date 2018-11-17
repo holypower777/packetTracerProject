@@ -1,0 +1,3 @@
+ip access-list <type> <name>
+permit <protocol> <any> <host> <ip> eq <port>
+ip access-group <name> in/out
