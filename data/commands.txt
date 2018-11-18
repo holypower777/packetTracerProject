@@ -1,3 +1,42 @@
 ip access-list <type> <name>
 permit <protocol> <any> <host> <ip> eq <port>
 ip access-group <name> in/out
+
+ip nat pool <name> <fromIP> <toIP> netmask <mask> - задать пул адресов
+router <protocol> <process id> - включить протокол дин. маршрутизации (id - любой)
+router-id <id> - назначить router-id (loopback ip)
+network <ip> <wildcard> area <area> - определяем интерфейсы учавствующие в процессе
+default-information originate - рассказать всем про дефолтный маршрут
+ip ospf authentication-key 1
+ip ospf message-digest-key 1 md5 MskVladPass
+ip ospf authentication message-digest
+
+===================DEFAULT ROUTER CONFIG===================
+en
+conf t
+hostname klgr-center-gw1
+int gi0/0
+no shutdown
+int gi0/1
+no shutdown
+exi
+enable secret apple_test
+line console 0
+login
+password console
+exi
+service password-encryption
+username admin secret 0 admin
+ip domain-name cisco-dmn
+crypto key generate rsa
+1024
+line vty 0 4
+login
+password admin
+transport input ssh
+===========================================================
+
+узнать побольше про зоны
+Стоит ли разделить нашу сеть на зоны?
+
+
