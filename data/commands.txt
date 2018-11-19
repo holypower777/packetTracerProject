@@ -10,11 +10,14 @@ default-information originate - рассказать всем про дефол�
 ip ospf authentication-key 1
 ip ospf message-digest-key 1 md5 MskVladPass
 ip ospf authentication message-digest
+router ei??? <n> - включать еигрп номер n
+no auto-summary - выключить автоматичиское суммирование масок
+
 
 ===================DEFAULT ROUTER CONFIG===================
 en
 conf t
-hostname klgr-center-gw1
+hostname klgr-balt-gw1
 int gi0/0
 no shutdown
 int gi0/1
