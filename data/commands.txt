@@ -1,6 +1,6 @@
 ip access-list <type> <name>
 permit <protocol> <any> <host> <ip> eq <port>
-ip access-group <name> in/out
+ip access-group <name> in/out - in - с нашей сети, out - с внешней
 
 ip nat pool <name> <fromIP> <toIP> netmask <mask> - задать пул адресов
 router <protocol> <process id> - включить протокол дин. маршрутизации (id - любой)
@@ -39,7 +39,126 @@ password admin
 transport input ssh
 ===========================================================
 
-узнать побольше про зоны
+У нас весь трафик, который хочет в интернет проходит через Москву?
+Если из питера мы хотим попасть в интернет, то почему мы идем через Москву, а не сразу в интернет?
+узнать побольше про зоны и пассивные интерфейсы
 Стоит ли разделить нашу сеть на зоны?
+Что за loopback?
 
 
+router ospf 1
+network 172.16.2.32 0.0.0.3 area 0
+network 172.16.255.64 0.0.0.0 area 0
+network 172.16.2.36 0.0.0.3 area 1
+network 172.16.2.40 0.0.0.3 area 1
+network 10.0.0.0 0.255.255.255 area 1
+
+
+console
+en
+apple_test
+conf t
+no enable secret
+line console 0
+no password
+
+
+permit ip 172.16.0.0 0.0.255.25 any
+
+
+no ip access-list extended Servers-out
+ip access-list extended Servers-out
+ remark --------PUBLIC--------
+ permit icmp any any
+ permit tcp any host 192.4.0.2 eq 80
+ permit tcp any host 192.4.0.4 eq smtp
+ permit tcp any host 192.4.0.4 eq pop3
+ remark --------MANAGEMENT--------
+ permit tcp host 192.4.6.61 any
+ permit tcp host 192.4.6.66 any
+ remark --------FTP--------
+ permit tcp 192.4.0.0 0.0.255.255 host 192.4.0.3 eq 445
+ permit tcp any host 192.4.0.3 range 20 21
+ remark --------DNS--------
+ permit udp 192.4.0.0 0.0.255.255 host 192.4.0.5 eq domain
+
+no ip access-list extended Other-in
+ip access-list extended Other-in
+ remark --------IAM--------
+ permit ip host 192.4.6.61 any
+ remark --------ADMIN--------
+ permit ip host 192.4.6.66 any
+ 
+no ip access-list extended Managment-out
+ip access-list extended Managment-out
+ remark --------IAM--------
+ permit ip host 192.4.6.61 192.4.1.0 0.0.0.255
+ remark --------ADMIN--------
+ permit ip host 192.4.6.66 192.4.1.0 0.0.0.255
+ 
+no ip access-list extended natInet
+ip access-list extended natInet
+ remark --------PTO--------
+ permit tcp 192.4.3.0 0.0.0.255 host 192.0.2.2 eq www
+ remark --------ACCOUNTING--------
+ permit tcp 192.4.5.0 0.0.0.255 host 192.0.2.5
+ remark --------FEO--------
+ permit ip host 192.4.4.123 any
+ remark --------MANAGMENT--------
+ permit ip host 192.4.6.61 any
+ permit ip host 192.4.6.66 any
+ remark --------DEPARTMENTS--------
+ permit ip host 192.4.16.222 any
+ permit ip host 192.4.17.222 any
+ permit ip host 192.4.24.222 any
+ 
+msk
+router ospf 1
+ router-id 192.4.255.1
+ log-adjacency-changes
+ passive-interface GigabitEthernet0/0.2
+ passive-interface GigabitEthernet0/0.3
+ passive-interface GigabitEthernet0/0.101
+ passive-interface GigabitEthernet0/0.102
+ passive-interface GigabitEthernet0/0.103
+ passive-interface GigabitEthernet0/0.104
+ passive-interface GigabitEthernet0/1.6
+ network 192.4.0.0 0.0.255.255 area 0
+ default-information originate
+ 
+spb
+router ospf 1
+ router-id 192.4.255.32
+ log-adjacency-changes
+ network 192.4.0.0 0.0.255.255 area 0
+ 
+spb2
+router ospf 1
+ router-id 192.4.255.33
+ log-adjacency-changes
+ network 192.4.0.0 0.0.255.255 area 0
+ 
+kmr
+router ospf 2
+ router-id 192.4.255.48
+ log-adjacency-changes
+ passive-interface GigabitEthernet0/0.2
+ network 192.4.0.0 0.0.255.255 area 0
+ 
+krs
+router ospf 1
+ router-id 192.4.255.80
+ log-adjacency-changes
+ network 192.4.0.0 0.0.255.255 area 0
+ 
+khbr
+router ospf 1
+ router-id 192.4.255.96
+ log-adjacency-changes
+ network 192.4.0.0 0.0.255.255 area 0
+
+vld
+router ospf 1
+ router-id 192.4.255.112
+ log-adjacency-changes
+ network 192.4.0.0 0.0.255.255 area 0 
